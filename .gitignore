@@ -1,0 +1,6 @@
+# Ключи, сертификаты и пароли в публичный репозиторий не попадают.
+GAP-1/tls/*.key
+GAP-1/tls/*.crt
+GAP-1/tls/*.srl
+GAP-1/tls/htpasswd
+GAP-1/tls/gw_password
