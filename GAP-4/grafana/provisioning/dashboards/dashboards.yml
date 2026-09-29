@@ -1,0 +1,22 @@
+apiVersion: 1
+
+# Папки создаются из поля folder. Дашборды лежат в репозитории, править их
+# в UI бессмысленно — при рестарте всё вернётся к версии из файла.
+providers:
+  - name: infra
+    folder: infra
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/dashboards/infra
+
+  - name: app
+    folder: app
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    updateIntervalSeconds: 30
+    options:
+      path: /etc/grafana/dashboards/app

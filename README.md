@@ -85,3 +85,13 @@ $ curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080
 ```
 
 Джобы: node, nginx, php-fpm, mysql, blackbox-http, blackbox-tcp, prometheus.
+
+## Остальные ДЗ
+
+Каждое следующее ДЗ — копия стенда из предыдущего плюс изменения, описание в
+README внутри каталога:
+
+- [GAP-2](GAP-2/README.md) — долговременное хранилище метрик (VictoriaMetrics);
+- [GAP-3](GAP-3/README.md) — алертинг в Telegram, critical и warning в разные группы;
+- [GAP-4](GAP-4/README.md) — Grafana: дашборды infra и app, алерты в Grafana,
+  drilldown по хостам.

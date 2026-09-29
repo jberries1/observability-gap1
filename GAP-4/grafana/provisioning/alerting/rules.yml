@@ -1,0 +1,89 @@
+apiVersion: 1
+
+groups:
+  # Компоненты CMS: главная, вход в админку, php-fpm, MariaDB.
+  # blackbox проверяет их снаружи, probe_success = 0 значит компонент лежит.
+  - orgId: 1
+    name: cms-availability
+    folder: app
+    interval: 10s
+    rules:
+      - uid: gf-cms-component-down
+        title: GrafanaCmsComponentDown
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 60
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: min by (instance, job) (probe_success{job=~"blackbox-http|blackbox-tcp"})
+              instant: true
+              intervalMs: 5000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [1]
+        for: 30s
+        noDataState: Alerting
+        execErrState: Error
+        labels:
+          severity: critical
+          source: grafana
+        annotations:
+          summary: 'Компонент CMS недоступен: {{ $labels.instance }}'
+          description: 'blackbox не может достучаться до {{ $labels.instance }} ({{ $labels.job }}) уже 30 секунд.'
+          __dashboardUid__: cms-overview
+          __panelId__: '20'
+
+  # Инфраструктура: пропал node_exporter — значит машину мы больше не видим.
+  - orgId: 1
+    name: infra-availability
+    folder: infra
+    interval: 10s
+    rules:
+      - uid: gf-host-down
+        title: GrafanaHostDown
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 60
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              expr: max by (instance) (up{job="node"})
+              instant: true
+              intervalMs: 5000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [1]
+        for: 1m
+        noDataState: Alerting
+        execErrState: Error
+        labels:
+          severity: critical
+          source: grafana
+        annotations:
+          summary: 'Хост {{ $labels.instance }} не отдаёт метрики'
+          description: 'node_exporter на {{ $labels.instance }} не скрейпится больше минуты: машина лежит или сломан сбор.'
+          __dashboardUid__: infra-overview
+          __panelId__: '1'

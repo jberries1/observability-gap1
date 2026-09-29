@@ -1,0 +1,109 @@
+groups:
+  - name: cms-availability
+    rules:
+      - alert: CmsDown
+        expr: probe_success{job="blackbox-http"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "CMS не отвечает: {{ $labels.instance }}"
+          description: "blackbox не получает 2xx уже 30 секунд."
+
+      - alert: CmsSlowResponse
+        expr: probe_duration_seconds{job="blackbox-http"} > 2
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CMS отвечает медленно: {{ $labels.instance }}"
+
+      - alert: ExporterDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Таргет {{ $labels.job }} недоступен"
+
+  - name: host
+    rules:
+      - alert: HostHighCpu
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU > 85% на {{ $labels.instance }}"
+
+      - alert: HostLowDisk
+        expr: |
+          node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"}
+            / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} * 100 < 15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Меньше 15% места на {{ $labels.mountpoint }} ({{ $labels.instance }})"
+
+      - alert: HostDiskCritical
+        expr: |
+          node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"}
+            / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} * 100 < 5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Меньше 5% места на {{ $labels.mountpoint }} ({{ $labels.instance }})"
+
+      - alert: HostLowMemory
+        expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Меньше 10% свободной памяти на {{ $labels.instance }}"
+
+  - name: cms-internals
+    rules:
+      - alert: PhpFpmDown
+        expr: probe_success{job="blackbox-tcp", instance="php:9000"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "php-fpm не принимает соединения"
+          description: "Сайт отдаёт 502, заказы не проходят."
+
+      - alert: PhpFpmQueueGrowing
+        expr: phpfpm_listen_queue > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Очередь php-fpm растёт (pool {{ $labels.pool }})"
+
+      - alert: PhpFpmMaxChildrenReached
+        expr: increase(phpfpm_max_children_reached[10m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "php-fpm упёрся в max_children"
+
+      - alert: MysqlDown
+        expr: mysql_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MariaDB недоступна"
+
+      - alert: MysqlConnectionsNearLimit
+        expr: |
+          mysql_global_status_threads_connected
+            / mysql_global_variables_max_connections * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Использовано более 80% коннектов к БД"

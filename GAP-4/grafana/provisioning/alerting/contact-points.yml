@@ -1,0 +1,14 @@
+apiVersion: 1
+
+# Grafana не шлёт в Telegram сама, а отдаёт алерты в Alertmanager из GAP-3.
+# Там уже есть маршрутизация по severity, шаблон сообщения и две группы —
+# второй раз всё это настраивать не нужно.
+contactPoints:
+  - orgId: 1
+    name: alertmanager-gap4
+    receivers:
+      - uid: am-gap4
+        type: prometheus-alertmanager
+        settings:
+          url: http://alertmanager:9093
+        disableResolveMessage: false

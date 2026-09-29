@@ -1,0 +1,14 @@
+{{ define "telegram.message" }}
+{{- if eq .Status "firing" }}FIRING{{ else }}RESOLVED{{ end }} [{{ .CommonLabels.severity | toUpper }}] {{ .CommonLabels.alertname }}
+{{ range .Alerts }}
+{{ .Annotations.summary }}
+{{- if .Annotations.description }}
+{{ .Annotations.description }}
+{{- end }}
+instance: {{ .Labels.instance }}
+начало: {{ .StartsAt.Format "02.01 15:04:05" }}
+{{- if eq .Status "resolved" }}
+конец: {{ .EndsAt.Format "02.01 15:04:05" }}
+{{- end }}
+{{ end }}
+{{- end }}
